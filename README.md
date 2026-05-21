@@ -1,12 +1,12 @@
 # Multi-Agent Investment Research System
 
-An AI infrastructure project that generates investment research reports by combining a FastAPI backend, LangGraph workflow orchestration, OpenAI tool calling, market data tools, news analysis, local SEC filing RAG, SQL persistence, Redis caching, Docker Compose, GitHub Actions, and a lightweight web UI.
+An AI infrastructure project that generates investment research reports by combining a FastAPI backend, LangGraph workflow orchestration, DeepSeek tool calling, market data tools, news analysis, local SEC filing RAG, SQL persistence, Redis caching, Docker Compose, GitHub Actions, and a lightweight web UI.
 
 ## Features
 
 - FastAPI backend with OpenAPI docs and health checks
 - LangGraph research workflow with explicit execution steps
-- OpenAI Responses API tool-calling service
+- DeepSeek API tool-calling service using the OpenAI-compatible SDK interface
 - yfinance stock quote tool
 - yfinance news analysis tool with baseline sentiment scoring
 - Local SEC filing RAG over text filings in `data/filings`
@@ -28,7 +28,7 @@ FastAPI Routes
         +--> Stock Tool -----------------> yfinance quote data
         +--> News Tool ------------------> yfinance news data
         +--> Filing RAG Tool ------------> local filing text chunks
-        +--> OpenAI Tool-Calling Agent --> stock/news tools
+        +--> DeepSeek Tool-Calling Agent --> stock/news tools
         |
         v
 LangGraph Workflow
@@ -50,7 +50,7 @@ Markdown Export
 - Python 3.13+
 - FastAPI
 - LangGraph
-- OpenAI Python SDK
+- DeepSeek API through the OpenAI-compatible Python SDK
 - SQLAlchemy 2.x
 - PostgreSQL / SQLite
 - Redis
@@ -93,8 +93,9 @@ Local defaults:
 ```bash
 DATABASE_URL=sqlite:///./investment_agent.db
 REDIS_URL=redis://localhost:6379/0
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-5.4-mini
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
 PostgreSQL example:
@@ -132,10 +133,11 @@ curl -X POST http://127.0.0.1:8000/graph/research \
   -d '{"ticker":"AAPL","horizon":"medium_term","risk_level":"medium"}'
 ```
 
-Run the OpenAI tool-calling agent:
+Run the DeepSeek tool-calling agent:
 
 ```bash
-export OPENAI_API_KEY="your_api_key"
+export DEEPSEEK_API_KEY="your_api_key"
+export DEEPSEEK_MODEL="deepseek-v4-flash"
 
 curl -X POST http://127.0.0.1:8000/agent/research \
   -H "Content-Type: application/json" \
@@ -178,7 +180,7 @@ curl http://127.0.0.1:8000/reports/1/markdown
 python -m pytest
 ```
 
-The test suite mocks external providers where appropriate, so CI does not require OpenAI credentials, live Redis, PostgreSQL, or Yahoo Finance network access.
+The test suite mocks external providers where appropriate, so CI does not require DeepSeek credentials, live Redis, PostgreSQL, or Yahoo Finance network access.
 
 ## CI
 
@@ -221,7 +223,7 @@ tests/                 Pytest suite
 
 ## Roadmap
 
-- Add OpenAI embeddings and pgvector for SEC filing RAG
+- Add embeddings and pgvector for SEC filing RAG
 - Add Alembic migrations
 - Add background report generation with a queue
 - Add authenticated users and report ownership

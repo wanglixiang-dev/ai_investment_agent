@@ -5,57 +5,73 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.schemas.agent import AgentResearchRequest
-from app.services.openai_agent_service import execute_agent_tool, run_openai_research_agent
+from app.services.deepseek_agent_service import execute_agent_tool, run_deepseek_research_agent
 
 
 client = TestClient(app)
 
 
-class FakeResponses:
+class FakeChatCompletions:
     def __init__(self) -> None:
         self.calls = 0
 
     def create(self, **kwargs):
         self.calls += 1
         if self.calls == 1:
+            quote_tool_call = SimpleNamespace(
+                id="call_quote",
+                function=SimpleNamespace(
+                    name="get_stock_quote",
+                    arguments=json.dumps({"ticker": "AAPL"}),
+                ),
+            )
+            news_tool_call = SimpleNamespace(
+                id="call_news",
+                function=SimpleNamespace(
+                    name="get_news_analysis",
+                    arguments=json.dumps({"ticker": "AAPL"}),
+                ),
+            )
             return SimpleNamespace(
-                id="resp_1",
-                output_text="",
-                output=[
+                choices=[
                     SimpleNamespace(
-                        type="function_call",
-                        call_id="call_quote",
-                        name="get_stock_quote",
-                        arguments=json.dumps({"ticker": "AAPL"}),
-                    ),
-                    SimpleNamespace(
-                        type="function_call",
-                        call_id="call_news",
-                        name="get_news_analysis",
-                        arguments=json.dumps({"ticker": "AAPL"}),
-                    ),
-                ],
+                        message=SimpleNamespace(
+                            content=None,
+                            tool_calls=[quote_tool_call, news_tool_call],
+                        )
+                    )
+                ]
             )
 
         return SimpleNamespace(
-            id="resp_2",
-            output_text="Final report using quote and news tools.",
-            output=[],
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="Final report using quote and news tools.",
+                        tool_calls=None,
+                    )
+                )
+            ]
         )
+
+
+class FakeChat:
+    def __init__(self) -> None:
+        self.completions = FakeChatCompletions()
 
 
 class FakeClient:
     def __init__(self) -> None:
-        self.responses = FakeResponses()
+        self.chat = FakeChat()
 
 
-def test_run_openai_research_agent_executes_tool_loop(monkeypatch) -> None:
+def test_run_deepseek_research_agent_executes_tool_loop(monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.openai_agent_service.get_stock_quote",
+        "app.services.deepseek_agent_service.get_stock_quote",
         lambda ticker: SimpleNamespace(model_dump=lambda mode: {"ticker": ticker, "price": 210.12}),
     )
     monkeypatch.setattr(
-        "app.services.openai_agent_service.get_news_analysis",
+        "app.services.deepseek_agent_service.get_news_analysis",
         lambda ticker: SimpleNamespace(
             model_dump=lambda mode: {
                 "ticker": ticker,
@@ -64,8 +80,16 @@ def test_run_openai_research_agent_executes_tool_loop(monkeypatch) -> None:
             }
         ),
     )
+    monkeypatch.setattr(
+        "app.services.deepseek_agent_service.get_settings",
+        lambda: SimpleNamespace(
+            deepseek_api_key="test-key",
+            deepseek_base_url="https://api.deepseek.com",
+            deepseek_model="deepseek-v4-flash",
+        ),
+    )
 
-    result = run_openai_research_agent(
+    result = run_deepseek_research_agent(
         AgentResearchRequest(ticker="aapl"),
         client=FakeClient(),
     )
@@ -89,9 +113,12 @@ def test_execute_agent_tool_rejects_unknown_tool() -> None:
 
 
 def test_agent_route_returns_503_without_api_key(monkeypatch) -> None:
-    monkeypatch.setattr("app.services.openai_agent_service.get_settings", lambda: SimpleNamespace(openai_api_key=None))
+    monkeypatch.setattr(
+        "app.services.deepseek_agent_service.get_settings",
+        lambda: SimpleNamespace(deepseek_api_key=None),
+    )
 
     response = client.post("/agent/research", json={"ticker": "AAPL"})
 
     assert response.status_code == 503
-    assert response.json()["detail"] == "OPENAI_API_KEY is required to run the OpenAI agent."
+    assert response.json()["detail"] == "DEEPSEEK_API_KEY is required to run the DeepSeek agent."

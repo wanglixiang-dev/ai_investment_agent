@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     stock_quote_cache_ttl_seconds: int = 60
     news_cache_ttl_seconds: int = 900
-    openai_api_key: str | None = None
-    openai_model: str = "gpt-5.4-mini"
+    deepseek_api_key: str | None = None
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-v4-flash"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
