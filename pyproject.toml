@@ -1,0 +1,26 @@
+[project]
+name = "investment-agent"
+version = "0.1.0"
+description = "Multi-agent investment research system"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "langgraph>=1.0.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic-settings>=2.5.0",
+    "openai>=2.0.0",
+    "psycopg[binary]>=3.2.0",
+    "redis>=5.0.0",
+    "sqlalchemy>=2.0.0",
+    "yfinance>=0.2.66",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.27.0",
+    "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

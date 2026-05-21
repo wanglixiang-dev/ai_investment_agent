@@ -1,0 +1,10 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.db
+*.sqlite
+.pytest_cache
+.git
+.env
+investment_agent.egg-info

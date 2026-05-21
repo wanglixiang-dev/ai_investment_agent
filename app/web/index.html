@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Investment Research System</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <aside class="panel controls">
+          <div>
+            <p class="eyebrow">Research Workflow</p>
+            <h1>Investment Research System</h1>
+            <p class="subtle">
+              Generate a saved report from market data, news, and local filing context.
+            </p>
+          </div>
+
+          <form id="research-form" class="form">
+            <label>
+              Ticker
+              <input id="ticker" name="ticker" value="AAPL" maxlength="10" required />
+            </label>
+
+            <label>
+              Horizon
+              <select id="horizon" name="horizon">
+                <option value="short_term">Short term</option>
+                <option value="medium_term" selected>Medium term</option>
+                <option value="long_term">Long term</option>
+              </select>
+            </label>
+
+            <label>
+              Risk level
+              <select id="risk-level" name="risk_level">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+
+            <button id="submit-button" type="submit">Generate Report</button>
+          </form>
+
+          <nav class="links">
+            <a href="/docs">API Docs</a>
+            <a href="/reports">Saved Reports</a>
+            <a href="/health">Health</a>
+          </nav>
+        </aside>
+
+        <section class="panel result">
+          <div class="result-header">
+            <div>
+              <p class="eyebrow">Output</p>
+              <h2 id="report-title">No report generated</h2>
+            </div>
+            <a id="markdown-link" class="secondary hidden" href="#">Markdown</a>
+          </div>
+
+          <div id="status" class="status">Ready.</div>
+
+          <div class="grid">
+            <section>
+              <h3>Report</h3>
+              <pre id="report">Submit a ticker to generate a report.</pre>
+            </section>
+
+            <section>
+              <h3>Workflow Trace</h3>
+              <ul id="steps" class="list"></ul>
+            </section>
+
+            <section>
+              <h3>Data Sources</h3>
+              <ul id="sources" class="list"></ul>
+            </section>
+
+            <section>
+              <h3>Errors</h3>
+              <ul id="errors" class="list"></ul>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
