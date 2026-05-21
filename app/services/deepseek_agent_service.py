@@ -148,7 +148,7 @@ def execute_agent_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _assistant_message_with_tool_calls(message: Any) -> dict[str, Any]:
-    return {
+    assistant_message = {
         "role": "assistant",
         "content": _message_content(message) or None,
         "tool_calls": [
@@ -163,6 +163,11 @@ def _assistant_message_with_tool_calls(message: Any) -> dict[str, Any]:
             for tool_call in message.tool_calls
         ],
     }
+    reasoning_content = getattr(message, "reasoning_content", None)
+    if reasoning_content:
+        assistant_message["reasoning_content"] = reasoning_content
+
+    return assistant_message
 
 
 def _message_content(message: Any) -> str:

@@ -37,6 +37,7 @@ class FakeChatCompletions:
                     SimpleNamespace(
                         message=SimpleNamespace(
                             content=None,
+                            reasoning_content="Need to call stock and news tools.",
                             tool_calls=[quote_tool_call, news_tool_call],
                         )
                     )
