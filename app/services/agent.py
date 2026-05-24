@@ -4,9 +4,9 @@ from typing import Any
 from openai import OpenAI
 
 from app.core.config import get_settings
-from app.schemas.agent import AgentResearchRequest, AgentResearchResponse, ToolExecution
-from app.tools.news_analysis import get_news_analysis
-from app.tools.stock_data import get_stock_quote
+from app.schemas.agent import AgentRequest, AgentResponse, ToolCall
+from app.tools.news import get_news_analysis
+from app.tools.stocks import get_stock_quote
 
 
 class AgentServiceError(RuntimeError):
@@ -53,10 +53,10 @@ TOOL_DEFINITIONS = [
 ]
 
 
-def run_deepseek_research_agent(
-    request: AgentResearchRequest,
+def run_agent(
+    request: AgentRequest,
     client: OpenAI | None = None,
-) -> AgentResearchResponse:
+) -> AgentResponse:
     settings = get_settings()
     if client is None:
         if not settings.deepseek_api_key:
@@ -83,7 +83,7 @@ def run_deepseek_research_agent(
         },
     ]
 
-    tool_executions: list[ToolExecution] = []
+    tool_executions: list[ToolCall] = []
 
     try:
         for _ in range(3):
@@ -96,7 +96,7 @@ def run_deepseek_research_agent(
             tool_calls = getattr(message, "tool_calls", None) or []
 
             if not tool_calls:
-                return AgentResearchResponse(
+                return AgentResponse(
                     ticker=ticker,
                     model=settings.deepseek_model,
                     final_report=_message_content(message),
@@ -110,9 +110,9 @@ def run_deepseek_research_agent(
                 function = tool_call.function
                 name = function.name
                 arguments = json.loads(function.arguments or "{}")
-                result = execute_agent_tool(name, arguments)
+                result = execute_tool(name, arguments)
                 tool_executions.append(
-                    ToolExecution(
+                    ToolCall(
                         name=name,
                         arguments=arguments,
                         result=result,
@@ -133,7 +133,7 @@ def run_deepseek_research_agent(
     raise AgentServiceError("DeepSeek agent exceeded the maximum tool-calling rounds.")
 
 
-def execute_agent_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+def execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     ticker = str(arguments.get("ticker", "")).strip().upper()
     if not ticker:
         raise AgentServiceError(f"{name} requires a ticker argument.")
@@ -177,7 +177,7 @@ def _message_content(message: Any) -> str:
     return "The model returned no final text."
 
 
-def _data_sources(tool_executions: list[ToolExecution]) -> list[str]:
+def _data_sources(tool_executions: list[ToolCall]) -> list[str]:
     sources = []
     if any(call.name == "get_stock_quote" for call in tool_executions):
         sources.append("yfinance:quote")

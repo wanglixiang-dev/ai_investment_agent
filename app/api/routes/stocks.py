@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.stocks import StockQuote
-from app.tools.stock_data import StockDataError, get_stock_quote
+from app.tools.stocks import StockDataError, get_stock_quote
 
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])

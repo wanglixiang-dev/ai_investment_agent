@@ -1,8 +1,8 @@
 from app.schemas.news import NewsAnalysis
 from app.schemas.research import ReportSection, ResearchRequest, ResearchReport
 from app.schemas.stocks import StockQuote
-from app.tools.news_analysis import NewsDataError, get_news_analysis
-from app.tools.stock_data import StockDataError, get_stock_quote
+from app.tools.news import NewsDataError, get_news_analysis
+from app.tools.stocks import StockDataError, get_stock_quote
 
 
 def build_mock_research_report(request: ResearchRequest) -> ResearchReport:

@@ -204,7 +204,7 @@ app/
   api/routes/          FastAPI route handlers
   cache/               Redis JSON cache helpers
   core/                Settings and configuration
-  db/                  SQLAlchemy models, sessions, repositories
+  db/                  SQLAlchemy models, sessions, repository helpers
   schemas/             Pydantic request/response models
   services/            Agent workflow and report formatting services
   tools/               Stock, news, and filing RAG tools

@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.agent import AgentResearchRequest, AgentResearchResponse
-from app.services.deepseek_agent_service import AgentServiceError, run_deepseek_research_agent
+from app.schemas.agent import AgentRequest, AgentResponse
+from app.services.agent import AgentServiceError, run_agent
 
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
 
-@router.post("/research", response_model=AgentResearchResponse)
-def create_agent_research(request: AgentResearchRequest) -> AgentResearchResponse:
+@router.post("/research", response_model=AgentResponse)
+def create_agent_research(request: AgentRequest) -> AgentResponse:
     try:
-        return run_deepseek_research_agent(request)
+        return run_agent(request)
     except AgentServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

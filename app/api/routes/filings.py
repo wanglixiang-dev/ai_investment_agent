@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 
 from app.schemas.filings import FilingSearchResponse
-from app.tools.filing_rag import FilingRagError, search_filing_context
+from app.tools.filings import FilingRagError, search_filing_context
 
 
 router = APIRouter(prefix="/filings", tags=["filings"])

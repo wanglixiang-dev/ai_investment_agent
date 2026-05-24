@@ -44,8 +44,8 @@ def fake_news_analysis(ticker: str) -> NewsAnalysis:
 
 
 def test_create_research_report_with_defaults(monkeypatch) -> None:
-    monkeypatch.setattr("app.services.research_service.get_stock_quote", fake_stock_quote)
-    monkeypatch.setattr("app.services.research_service.get_news_analysis", fake_news_analysis)
+    monkeypatch.setattr("app.services.research.get_stock_quote", fake_stock_quote)
+    monkeypatch.setattr("app.services.research.get_news_analysis", fake_news_analysis)
 
     response = client.post("/research", json={"ticker": "aapl"})
 
@@ -70,9 +70,9 @@ def test_create_research_report_rejects_empty_ticker() -> None:
 
 
 def test_create_research_report_accepts_custom_profile(monkeypatch) -> None:
-    monkeypatch.setattr("app.services.research_service.get_news_analysis", fake_news_analysis)
+    monkeypatch.setattr("app.services.research.get_news_analysis", fake_news_analysis)
     monkeypatch.setattr(
-        "app.services.research_service.get_stock_quote",
+        "app.services.research.get_stock_quote",
         lambda ticker: StockQuote(
             ticker=ticker.upper(),
             price=430.00,
@@ -107,13 +107,13 @@ def test_create_research_report_accepts_custom_profile(monkeypatch) -> None:
 def test_create_research_report_keeps_working_when_market_data_fails(
     monkeypatch,
 ) -> None:
-    from app.tools.stock_data import StockDataError
+    from app.tools.stocks import StockDataError
 
     def fake_get_stock_quote(ticker: str) -> StockQuote:
         raise StockDataError("provider timed out")
 
-    monkeypatch.setattr("app.services.research_service.get_stock_quote", fake_get_stock_quote)
-    monkeypatch.setattr("app.services.research_service.get_news_analysis", fake_news_analysis)
+    monkeypatch.setattr("app.services.research.get_stock_quote", fake_get_stock_quote)
+    monkeypatch.setattr("app.services.research.get_news_analysis", fake_news_analysis)
 
     response = client.post("/research", json={"ticker": "nvda"})
 
@@ -127,13 +127,13 @@ def test_create_research_report_keeps_working_when_market_data_fails(
 def test_create_research_report_keeps_working_when_news_data_fails(
     monkeypatch,
 ) -> None:
-    from app.tools.news_analysis import NewsDataError
+    from app.tools.news import NewsDataError
 
     def fake_get_news_analysis(ticker: str) -> NewsAnalysis:
         raise NewsDataError("news provider timed out")
 
-    monkeypatch.setattr("app.services.research_service.get_stock_quote", fake_stock_quote)
-    monkeypatch.setattr("app.services.research_service.get_news_analysis", fake_get_news_analysis)
+    monkeypatch.setattr("app.services.research.get_stock_quote", fake_stock_quote)
+    monkeypatch.setattr("app.services.research.get_news_analysis", fake_get_news_analysis)
 
     response = client.post("/research", json={"ticker": "nvda"})
 

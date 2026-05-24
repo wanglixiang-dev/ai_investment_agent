@@ -1,7 +1,7 @@
-from app.db.models import ResearchReportRecord
+from app.db.models import ReportRecord
 
 
-def format_report_as_markdown(record: ResearchReportRecord) -> str:
+def to_markdown(record: ReportRecord) -> str:
     lines = [
         f"# Investment Research Report: {record.ticker}",
         "",

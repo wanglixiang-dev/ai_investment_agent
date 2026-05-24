@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 
-class ResearchReportRecordResponse(BaseModel):
+class ReportResponse(BaseModel):
     id: int
     ticker: str
     horizon: str

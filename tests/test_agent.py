@@ -4,8 +4,8 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.schemas.agent import AgentResearchRequest
-from app.services.deepseek_agent_service import execute_agent_tool, run_deepseek_research_agent
+from app.schemas.agent import AgentRequest
+from app.services.agent import execute_tool, run_agent
 
 
 client = TestClient(app)
@@ -66,13 +66,13 @@ class FakeClient:
         self.chat = FakeChat()
 
 
-def test_run_deepseek_research_agent_executes_tool_loop(monkeypatch) -> None:
+def test_run_agent_executes_tool_loop(monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.deepseek_agent_service.get_stock_quote",
+        "app.services.agent.get_stock_quote",
         lambda ticker: SimpleNamespace(model_dump=lambda mode: {"ticker": ticker, "price": 210.12}),
     )
     monkeypatch.setattr(
-        "app.services.deepseek_agent_service.get_news_analysis",
+        "app.services.agent.get_news_analysis",
         lambda ticker: SimpleNamespace(
             model_dump=lambda mode: {
                 "ticker": ticker,
@@ -82,7 +82,7 @@ def test_run_deepseek_research_agent_executes_tool_loop(monkeypatch) -> None:
         ),
     )
     monkeypatch.setattr(
-        "app.services.deepseek_agent_service.get_settings",
+        "app.services.agent.get_settings",
         lambda: SimpleNamespace(
             deepseek_api_key="test-key",
             deepseek_base_url="https://api.deepseek.com",
@@ -90,8 +90,8 @@ def test_run_deepseek_research_agent_executes_tool_loop(monkeypatch) -> None:
         ),
     )
 
-    result = run_deepseek_research_agent(
-        AgentResearchRequest(ticker="aapl"),
+    result = run_agent(
+        AgentRequest(ticker="aapl"),
         client=FakeClient(),
     )
 
@@ -104,9 +104,9 @@ def test_run_deepseek_research_agent_executes_tool_loop(monkeypatch) -> None:
     assert result.data_sources == ["yfinance:quote", "yfinance:news"]
 
 
-def test_execute_agent_tool_rejects_unknown_tool() -> None:
+def test_execute_tool_rejects_unknown_tool() -> None:
     try:
-        execute_agent_tool("unknown_tool", {"ticker": "AAPL"})
+        execute_tool("unknown_tool", {"ticker": "AAPL"})
     except Exception as exc:
         assert "Unknown tool" in str(exc)
     else:
@@ -115,7 +115,7 @@ def test_execute_agent_tool_rejects_unknown_tool() -> None:
 
 def test_agent_route_returns_503_without_api_key(monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.deepseek_agent_service.get_settings",
+        "app.services.agent.get_settings",
         lambda: SimpleNamespace(deepseek_api_key=None),
     )
 

@@ -1,11 +1,11 @@
 from datetime import UTC, datetime
 
-from app.db.models import ResearchReportRecord
-from app.services.report_formatter import format_report_as_markdown
+from app.db.models import ReportRecord
+from app.services.formatter import to_markdown
 
 
-def test_format_report_as_markdown() -> None:
-    record = ResearchReportRecord(
+def test_to_markdown() -> None:
+    record = ReportRecord(
         id=1,
         ticker="AAPL",
         horizon="medium_term",
@@ -23,7 +23,7 @@ def test_format_report_as_markdown() -> None:
         created_at=datetime(2026, 5, 21, tzinfo=UTC),
     )
 
-    markdown = format_report_as_markdown(record)
+    markdown = to_markdown(record)
 
     assert markdown.startswith("# Investment Research Report: AAPL")
     assert "- Report ID: 1" in markdown

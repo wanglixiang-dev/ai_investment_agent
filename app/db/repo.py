@@ -1,16 +1,16 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import ResearchReportRecord
-from app.schemas.workflow import GraphResearchRequest, GraphResearchResponse
+from app.db.models import ReportRecord
+from app.schemas.workflow import WorkflowRequest, WorkflowResponse
 
 
-def create_research_report_record(
+def create_report(
     db: Session,
-    request: GraphResearchRequest,
-    response: GraphResearchResponse,
-) -> ResearchReportRecord:
-    record = ResearchReportRecord(
+    request: WorkflowRequest,
+    response: WorkflowResponse,
+) -> ReportRecord:
+    record = ReportRecord(
         ticker=response.ticker,
         horizon=request.horizon.value,
         risk_level=request.risk_level.value,
@@ -25,20 +25,20 @@ def create_research_report_record(
     return record
 
 
-def list_research_report_records(
+def list_reports(
     db: Session,
     limit: int = 20,
-) -> list[ResearchReportRecord]:
+) -> list[ReportRecord]:
     statement = (
-        select(ResearchReportRecord)
-        .order_by(ResearchReportRecord.created_at.desc())
+        select(ReportRecord)
+        .order_by(ReportRecord.created_at.desc())
         .limit(limit)
     )
     return list(db.scalars(statement))
 
 
-def get_research_report_record(
+def get_report(
     db: Session,
     report_id: int,
-) -> ResearchReportRecord | None:
-    return db.get(ResearchReportRecord, report_id)
+) -> ReportRecord | None:
+    return db.get(ReportRecord, report_id)

@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.tools.filing_rag import search_filing_context
+from app.tools.filings import search_filing_context
 
 
 client = TestClient(app)
@@ -19,7 +19,7 @@ def test_search_filing_context(monkeypatch, tmp_path: Path) -> None:
         encoding="utf-8",
     )
     monkeypatch.setattr(
-        "app.tools.filing_rag.get_settings",
+        "app.tools.filings.get_settings",
         lambda: SimpleNamespace(filing_data_dir=str(filing_dir)),
     )
 
@@ -39,7 +39,7 @@ def test_search_filings_route(monkeypatch, tmp_path: Path) -> None:
         encoding="utf-8",
     )
     monkeypatch.setattr(
-        "app.tools.filing_rag.get_settings",
+        "app.tools.filings.get_settings",
         lambda: SimpleNamespace(filing_data_dir=str(filing_dir)),
     )
 
@@ -53,7 +53,7 @@ def test_search_filings_route(monkeypatch, tmp_path: Path) -> None:
 
 def test_search_filings_route_returns_404_for_missing_file(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
-        "app.tools.filing_rag.get_settings",
+        "app.tools.filings.get_settings",
         lambda: SimpleNamespace(filing_data_dir=str(tmp_path)),
     )
 

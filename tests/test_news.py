@@ -38,7 +38,7 @@ def test_read_news_analysis(monkeypatch) -> None:
 
 
 def test_read_news_analysis_returns_502_on_provider_error(monkeypatch) -> None:
-    from app.tools.news_analysis import NewsDataError
+    from app.tools.news import NewsDataError
 
     def fake_get_news_analysis(ticker: str) -> NewsAnalysis:
         raise NewsDataError(f"No news data returned for {ticker.upper()}.")

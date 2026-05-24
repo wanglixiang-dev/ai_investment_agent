@@ -3,7 +3,7 @@ from typing import Any
 
 import yfinance as yf
 
-from app.cache.json_cache import get_json_cache
+from app.cache.json import get_json_cache
 from app.core.config import get_settings
 from app.schemas.stocks import StockQuote
 

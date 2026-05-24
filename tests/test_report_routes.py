@@ -3,10 +3,10 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 
 from app.db.base import Base
-from app.db.repositories import create_research_report_record
+from app.db.repo import create_report
 from app.db.session import get_db
 from app.main import app
-from app.schemas.workflow import GraphResearchRequest, GraphResearchResponse, WorkflowStep
+from app.schemas.workflow import WorkflowRequest, WorkflowResponse, WorkflowStep
 
 
 def test_get_report_markdown_route() -> None:
@@ -25,10 +25,10 @@ def test_get_report_markdown_route() -> None:
     app.dependency_overrides[get_db] = override_db
 
     with TestingSessionLocal() as db:
-        create_research_report_record(
+        create_report(
             db,
-            GraphResearchRequest(ticker="aapl"),
-            GraphResearchResponse(
+            WorkflowRequest(ticker="aapl"),
+            WorkflowResponse(
                 ticker="AAPL",
                 horizon="medium_term",
                 risk_level="medium",

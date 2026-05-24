@@ -1,1 +1,1 @@
-"""Database models, sessions, and repositories."""
+"""Database models, sessions, and repository helpers."""

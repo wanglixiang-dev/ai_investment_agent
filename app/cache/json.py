@@ -4,7 +4,7 @@ from typing import Any
 from redis import Redis
 from redis.exceptions import RedisError
 
-from app.cache.redis_client import get_redis_client
+from app.cache.redis import get_redis_client
 
 
 class JsonCache:

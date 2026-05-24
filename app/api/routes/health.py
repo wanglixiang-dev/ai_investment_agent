@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.cache.redis_client import get_redis_client
+from app.cache.redis import get_redis_client
 from app.core.config import get_settings
 from app.db.session import get_db
 

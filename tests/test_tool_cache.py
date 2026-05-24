@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 from app.schemas.news import NewsAnalysis, NewsArticle, SentimentLabel
 from app.schemas.stocks import StockQuote
-from app.tools.news_analysis import get_news_analysis
-from app.tools.stock_data import get_stock_quote
+from app.tools.news import get_news_analysis
+from app.tools.stocks import get_stock_quote
 
 
 class FakeCache:
@@ -26,7 +26,7 @@ def test_stock_quote_uses_cache(monkeypatch) -> None:
         fetched_at=datetime(2026, 5, 21, tzinfo=UTC),
     ).model_dump(mode="json")
     cache = FakeCache(cached_quote)
-    monkeypatch.setattr("app.tools.stock_data.get_json_cache", lambda: cache)
+    monkeypatch.setattr("app.tools.stocks.get_json_cache", lambda: cache)
 
     quote = get_stock_quote("aapl")
 
@@ -37,13 +37,13 @@ def test_stock_quote_uses_cache(monkeypatch) -> None:
 
 def test_stock_quote_writes_cache_on_miss(monkeypatch) -> None:
     cache = FakeCache()
-    monkeypatch.setattr("app.tools.stock_data.get_json_cache", lambda: cache)
+    monkeypatch.setattr("app.tools.stocks.get_json_cache", lambda: cache)
     monkeypatch.setattr(
-        "app.tools.stock_data.get_settings",
+        "app.tools.stocks.get_settings",
         lambda: SimpleNamespace(stock_quote_cache_ttl_seconds=60),
     )
     monkeypatch.setattr(
-        "app.tools.stock_data.yf.Ticker",
+        "app.tools.stocks.yf.Ticker",
         lambda ticker: SimpleNamespace(
             fast_info={
                 "last_price": 210.12,
@@ -71,7 +71,7 @@ def test_news_analysis_uses_cache(monkeypatch) -> None:
         articles=[NewsArticle(title="Apple revenue growth beats expectations")],
     ).model_dump(mode="json")
     cache = FakeCache(cached_analysis)
-    monkeypatch.setattr("app.tools.news_analysis.get_json_cache", lambda: cache)
+    monkeypatch.setattr("app.tools.news.get_json_cache", lambda: cache)
 
     analysis = get_news_analysis("aapl")
 

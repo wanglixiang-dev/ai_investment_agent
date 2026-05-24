@@ -74,15 +74,15 @@ def fake_filing_context(ticker: str, query: str, top_k: int = 3) -> FilingSearch
 def test_graph_research_workflow_success(monkeypatch) -> None:
     app.dependency_overrides[get_db] = override_db
     monkeypatch.setattr(
-        "app.services.langgraph_research_workflow.get_stock_quote",
+        "app.services.workflow.get_stock_quote",
         fake_stock_quote,
     )
     monkeypatch.setattr(
-        "app.services.langgraph_research_workflow.get_news_analysis",
+        "app.services.workflow.get_news_analysis",
         fake_news_analysis,
     )
     monkeypatch.setattr(
-        "app.services.langgraph_research_workflow.search_filing_context",
+        "app.services.workflow.search_filing_context",
         fake_filing_context,
     )
 
@@ -107,9 +107,9 @@ def test_graph_research_workflow_success(monkeypatch) -> None:
 
 def test_graph_research_workflow_continues_when_tools_fail(monkeypatch) -> None:
     app.dependency_overrides[get_db] = override_db
-    from app.tools.news_analysis import NewsDataError
-    from app.tools.stock_data import StockDataError
-    from app.tools.filing_rag import FilingRagError
+    from app.tools.news import NewsDataError
+    from app.tools.stocks import StockDataError
+    from app.tools.filings import FilingRagError
 
     def fail_quote(ticker: str) -> StockQuote:
         raise StockDataError("quote timeout")
@@ -121,15 +121,15 @@ def test_graph_research_workflow_continues_when_tools_fail(monkeypatch) -> None:
         raise FilingRagError("filing missing")
 
     monkeypatch.setattr(
-        "app.services.langgraph_research_workflow.get_stock_quote",
+        "app.services.workflow.get_stock_quote",
         fail_quote,
     )
     monkeypatch.setattr(
-        "app.services.langgraph_research_workflow.get_news_analysis",
+        "app.services.workflow.get_news_analysis",
         fail_news,
     )
     monkeypatch.setattr(
-        "app.services.langgraph_research_workflow.search_filing_context",
+        "app.services.workflow.search_filing_context",
         fail_filing,
     )
 

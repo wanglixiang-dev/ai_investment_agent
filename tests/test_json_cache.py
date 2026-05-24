@@ -1,6 +1,6 @@
 from redis.exceptions import RedisError
 
-from app.cache.json_cache import JsonCache
+from app.cache.json import JsonCache
 
 
 class FakeRedis:

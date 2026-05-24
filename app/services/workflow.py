@@ -6,10 +6,10 @@ from langgraph.graph import END, START, StateGraph
 from app.schemas.filings import FilingSearchResponse
 from app.schemas.news import NewsAnalysis
 from app.schemas.stocks import StockQuote
-from app.schemas.workflow import GraphResearchRequest, GraphResearchResponse, WorkflowStep
-from app.tools.filing_rag import FilingRagError, search_filing_context
-from app.tools.news_analysis import NewsDataError, get_news_analysis
-from app.tools.stock_data import StockDataError, get_stock_quote
+from app.schemas.workflow import WorkflowRequest, WorkflowResponse, WorkflowStep
+from app.tools.filings import FilingRagError, search_filing_context
+from app.tools.news import NewsDataError, get_news_analysis
+from app.tools.stocks import StockDataError, get_stock_quote
 
 
 class ResearchWorkflowState(TypedDict, total=False):
@@ -25,7 +25,7 @@ class ResearchWorkflowState(TypedDict, total=False):
     errors: list[str]
 
 
-def run_research_workflow(request: GraphResearchRequest) -> GraphResearchResponse:
+def run_workflow(request: WorkflowRequest) -> WorkflowResponse:
     ticker = request.ticker.strip().upper()
     initial_state: ResearchWorkflowState = {
         "ticker": ticker,
@@ -36,9 +36,9 @@ def run_research_workflow(request: GraphResearchRequest) -> GraphResearchRespons
         "errors": [],
     }
 
-    final_state = build_research_workflow().invoke(initial_state)
+    final_state = build_workflow().invoke(initial_state)
 
-    return GraphResearchResponse(
+    return WorkflowResponse(
         ticker=ticker,
         horizon=request.horizon,
         risk_level=request.risk_level,
@@ -50,7 +50,7 @@ def run_research_workflow(request: GraphResearchRequest) -> GraphResearchRespons
 
 
 @lru_cache
-def build_research_workflow():
+def build_workflow():
     graph = StateGraph(ResearchWorkflowState)
 
     graph.add_node("fetch_market_data", fetch_market_data)

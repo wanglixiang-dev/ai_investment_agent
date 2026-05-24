@@ -2,12 +2,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.base import Base
-from app.db.repositories import (
-    create_research_report_record,
-    get_research_report_record,
-    list_research_report_records,
+from app.db.repo import (
+    create_report,
+    get_report,
+    list_reports,
 )
-from app.schemas.workflow import GraphResearchRequest, GraphResearchResponse, WorkflowStep
+from app.schemas.workflow import WorkflowRequest, WorkflowResponse, WorkflowStep
 
 
 def test_create_and_read_research_report_record() -> None:
@@ -16,10 +16,10 @@ def test_create_and_read_research_report_record() -> None:
     Base.metadata.create_all(bind=engine)
 
     with TestingSessionLocal() as db:
-        record = create_research_report_record(
+        record = create_report(
             db,
-            GraphResearchRequest(ticker="aapl"),
-            GraphResearchResponse(
+            WorkflowRequest(ticker="aapl"),
+            WorkflowResponse(
                 ticker="AAPL",
                 horizon="medium_term",
                 risk_level="medium",
@@ -36,8 +36,8 @@ def test_create_and_read_research_report_record() -> None:
             ),
         )
 
-        loaded = get_research_report_record(db, record.id)
-        records = list_research_report_records(db)
+        loaded = get_report(db, record.id)
+        records = list_reports(db)
 
     assert loaded is not None
     assert loaded.ticker == "AAPL"

@@ -37,7 +37,7 @@ def test_read_stock_quote(monkeypatch) -> None:
 
 
 def test_read_stock_quote_returns_502_on_provider_error(monkeypatch) -> None:
-    from app.tools.stock_data import StockDataError
+    from app.tools.stocks import StockDataError
 
     def fake_get_stock_quote(ticker: str) -> StockQuote:
         raise StockDataError(f"No quote data returned for {ticker.upper()}.")

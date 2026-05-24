@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.news import NewsAnalysis
-from app.tools.news_analysis import NewsDataError, get_news_analysis
+from app.tools.news import NewsDataError, get_news_analysis
 
 
 router = APIRouter(prefix="/news", tags=["news"])
