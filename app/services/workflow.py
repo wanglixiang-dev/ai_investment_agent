@@ -12,6 +12,25 @@ from app.tools.news import NewsDataError, get_news_analysis
 from app.tools.stocks import StockDataError, get_stock_quote
 
 
+RISK_KEYWORDS = (
+    "risk",
+    "risks",
+    "uncertain",
+    "uncertainty",
+    "competition",
+    "competitive",
+    "supply",
+    "supplier",
+    "customer",
+    "customers",
+    "demand",
+    "liquidity",
+    "margin",
+    "macroeconomic",
+    "regulatory",
+)
+
+
 class ResearchWorkflowState(TypedDict, total=False):
     ticker: str
     horizon: str
@@ -122,8 +141,8 @@ def analyze_news(state: ResearchWorkflowState) -> ResearchWorkflowState:
 def retrieve_filing_context(state: ResearchWorkflowState) -> ResearchWorkflowState:
     ticker = state["ticker"]
     query = (
-        f"{ticker} business risks revenue growth margins liquidity competition "
-        "management discussion financial condition"
+        f"{ticker} management discussion revenue gross margin operating income "
+        "liquidity risk factors competition business outlook financial condition"
     )
     try:
         filing_context = search_filing_context(ticker=ticker, query=query, top_k=3)
@@ -156,7 +175,8 @@ def generate_report(state: ResearchWorkflowState) -> ResearchWorkflowState:
             _market_data_section(state),
             _news_section(state),
             _filing_section(state),
-            _risk_section(state),
+            _company_risk_section(state),
+            _analysis_limitations_section(state),
             _decision_section(state),
         ]
     )
@@ -223,15 +243,54 @@ def _filing_section(state: ResearchWorkflowState) -> str:
     return "SEC Filing Insights\n" + "\n".join(bullets)
 
 
-def _risk_section(state: ResearchWorkflowState) -> str:
-    risks = [
+def _company_risk_section(state: ResearchWorkflowState) -> str:
+    filing_data = state.get("filing_context")
+    if not filing_data:
+        return "Company Risks\nNo SEC filing context was available to extract company-specific risks."
+
+    filing_context = FilingSearchResponse.model_validate(filing_data)
+    risk_sentences = _extract_risk_sentences(filing_context)
+    if not risk_sentences:
+        fallback_chunks = [
+            f"- {chunk.text[:220]}{'...' if len(chunk.text) > 220 else ''}"
+            for chunk in filing_context.chunks[:2]
+        ]
+        return "Company Risks\n" + "\n".join(fallback_chunks)
+
+    bullets = [f"- {sentence}" for sentence in risk_sentences[:3]]
+    return "Company Risks\n" + "\n".join(bullets)
+
+
+def _analysis_limitations_section(state: ResearchWorkflowState) -> str:
+    limitations = [
         "provider data may be delayed or incomplete",
         "keyword sentiment can miss nuance",
     ]
     if state.get("errors"):
-        risks.append("one or more workflow tools failed")
+        limitations.append("one or more workflow tools failed")
 
-    return f"Key Risks\nPrimary risks: {', '.join(risks)}."
+    return f"Analysis Limitations\nPrimary limitations: {', '.join(limitations)}."
+
+
+def _extract_risk_sentences(filing_context: FilingSearchResponse) -> list[str]:
+    sentences: list[str] = []
+    seen = set()
+    for chunk in filing_context.chunks:
+        for sentence in _split_sentences(chunk.text):
+            normalized = sentence.lower()
+            if not any(keyword in normalized for keyword in RISK_KEYWORDS):
+                continue
+            compact = " ".join(sentence.split())
+            if compact in seen:
+                continue
+            seen.add(compact)
+            sentences.append(compact)
+    return sentences
+
+
+def _split_sentences(text: str) -> list[str]:
+    candidates = [part.strip() for part in text.replace("\n", " ").split(".")]
+    return [f"{candidate}." for candidate in candidates if len(candidate.split()) >= 8]
 
 
 def _decision_section(state: ResearchWorkflowState) -> str:

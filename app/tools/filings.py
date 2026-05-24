@@ -47,6 +47,9 @@ SECTION_RE = re.compile(
     r"\b((?:part\s+[ivx]+\.?\s+)?item\s+\d+[a-z]?\.?)\s+([^.\n]{0,90})",
     re.IGNORECASE,
 )
+XBRL_TAG_RE = re.compile(r"\b(?:[a-z][a-z0-9_-]*:)[a-z][a-z0-9_-]*\b", re.IGNORECASE)
+XBRL_WORD_RE = re.compile(r"\b(?:member|axis|domain|abstract|duration|instant)\b", re.IGNORECASE)
+SENTENCE_RE = re.compile(r"\b[A-Z][^.!?]{35,}[.!?]")
 
 
 @dataclass(frozen=True)
@@ -218,9 +221,9 @@ def _select_latest_filing(recent: dict[str, list[Any]], form: str | None = None)
 
 
 def _index_document(document: FilingDocument) -> list[FilingChunk]:
-    chunk_texts = _chunk_text(document.text)
+    chunk_texts = [chunk for chunk in _chunk_text(document.text) if _is_high_quality_chunk(chunk)]
     if not chunk_texts:
-        raise FilingRagError(f"Filing document for {document.ticker} is empty.")
+        raise FilingRagError(f"Filing document for {document.ticker} has no usable text chunks.")
 
     chunks = [
         FilingChunk(
@@ -283,7 +286,8 @@ def _rank_chunks(chunks: list[FilingChunk], query: str) -> list[FilingChunk]:
     ranked = []
     for chunk, terms in zip(chunks, chunk_terms, strict=True):
         chunk_vector = _tfidf_vector(terms, document_frequency, len(chunks))
-        ranked.append(chunk.model_copy(update={"score": _cosine_similarity(query_vector, chunk_vector)}))
+        score = _cosine_similarity(query_vector, chunk_vector) + _section_boost(chunk.section)
+        ranked.append(chunk.model_copy(update={"score": score}))
 
     return sorted(ranked, key=lambda chunk: chunk.score, reverse=True)
 
@@ -355,6 +359,41 @@ def _chunk_text(document: str, max_words: int = 220, overlap_words: int = 40) ->
     return chunks
 
 
+def _is_high_quality_chunk(text: str) -> bool:
+    words = text.split()
+    if len(words) < 6:
+        return False
+
+    xbrl_tags = XBRL_TAG_RE.findall(text)
+    xbrl_words = XBRL_WORD_RE.findall(text)
+    if len(xbrl_tags) >= 2:
+        return False
+    if (len(xbrl_tags) + len(xbrl_words)) / len(words) > 0.08:
+        return False
+
+    alpha_chars = sum(1 for char in text if char.isalpha())
+    digit_chars = sum(1 for char in text if char.isdigit())
+    if alpha_chars == 0 or digit_chars / max(alpha_chars, 1) > 0.45:
+        return False
+
+    if len(words) >= 25 and not SENTENCE_RE.search(text):
+        return False
+
+    return True
+
+
+def _section_boost(section: str | None) -> float:
+    if not section:
+        return 0.0
+
+    normalized = section.lower()
+    if "item 1a" in normalized or "item 7" in normalized or "item 2" in normalized:
+        return 0.05
+    if "management discussion" in normalized or "risk factors" in normalized:
+        return 0.05
+    return 0.0
+
+
 def _detect_section(text: str) -> str | None:
     match = SECTION_RE.search(text)
     if not match:
@@ -408,13 +447,13 @@ class _TextExtractor(HTMLParser):
         self._skip_depth = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"script", "style"}:
+        if tag in {"script", "style"} or _is_xbrl_tag(tag):
             self._skip_depth += 1
         if tag in {"br", "div", "p", "tr", "li", "h1", "h2", "h3"}:
             self.parts.append(" ")
 
     def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style"} and self._skip_depth > 0:
+        if (tag in {"script", "style"} or _is_xbrl_tag(tag)) and self._skip_depth > 0:
             self._skip_depth -= 1
         if tag in {"div", "p", "tr", "li", "h1", "h2", "h3"}:
             self.parts.append(" ")
@@ -428,8 +467,14 @@ def _html_to_text(raw_document: str) -> str:
     parser = _TextExtractor()
     parser.feed(raw_document)
     text = html.unescape(" ".join(parser.parts))
+    text = XBRL_TAG_RE.sub(" ", text)
+    text = re.sub(r"\b\d{10}\b", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
+
+def _is_xbrl_tag(tag: str) -> bool:
+    return tag.startswith(("ix:", "xbrli:", "xlink:", "link:", "xbrldi:"))
 
 
 def _filing_path(ticker: str) -> Path:

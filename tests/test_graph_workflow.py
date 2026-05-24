@@ -65,7 +65,11 @@ def fake_filing_context(ticker: str, query: str, top_k: int = 3) -> FilingSearch
                 ticker=ticker.upper(),
                 chunk_id=0,
                 score=0.75,
-                text="Revenue growth depends on services margin and product demand.",
+                text=(
+                    "Revenue growth depends on services margin and product demand. "
+                    "The company faces risks from supply constraints, customer demand, "
+                    "and competitive pressure."
+                ),
             )
         ],
     )
@@ -101,6 +105,10 @@ def test_graph_research_workflow_success(monkeypatch) -> None:
     assert "Market Data" in body["final_report"]
     assert "News Sentiment" in body["final_report"]
     assert "SEC Filing Insights" in body["final_report"]
+    assert "Company Risks" in body["final_report"]
+    assert "supply constraints" in body["final_report"]
+    assert "Analysis Limitations" in body["final_report"]
+    assert "provider data may be delayed" in body["final_report"]
     assert body["report_id"] == 1
     app.dependency_overrides.clear()
 
@@ -144,6 +152,8 @@ def test_graph_research_workflow_continues_when_tools_fail(monkeypatch) -> None:
     assert body["steps"][1]["status"] == "failed"
     assert body["steps"][2]["status"] == "failed"
     assert body["steps"][3]["status"] == "success"
+    assert "No SEC filing context was available to extract company-specific risks" in body["final_report"]
+    assert "Analysis Limitations" in body["final_report"]
     assert "insufficient data" in body["final_report"]
     assert body["report_id"] == 1
     app.dependency_overrides.clear()
