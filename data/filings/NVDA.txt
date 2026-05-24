@@ -1,0 +1,9 @@
+NVIDIA designs graphics processing units, accelerated computing platforms, and AI infrastructure products for data center, gaming, professional visualization, automotive, and OEM markets.
+
+Revenue growth depends heavily on data center demand, AI accelerator adoption, cloud service provider capital expenditure, and enterprise AI workloads.
+
+Key risks include supply constraints, export controls, dependence on semiconductor manufacturing partners, competition from custom AI chips, and cyclicality in gaming and data center demand.
+
+Gross margin can be affected by product mix, memory costs, supply chain constraints, and pricing pressure from competitors.
+
+Liquidity is supported by operating cash flow, cash reserves, and strong demand for accelerated computing products.
