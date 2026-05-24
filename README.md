@@ -1,6 +1,6 @@
 # Multi-Agent Investment Research System
 
-An AI infrastructure project that generates investment research reports by combining a FastAPI backend, LangGraph workflow orchestration, DeepSeek tool calling, market data tools, news analysis, local SEC filing RAG, SQL persistence, Redis caching, Docker Compose, GitHub Actions, and a lightweight web UI.
+An AI infrastructure project that generates investment research reports by combining a FastAPI backend, LangGraph workflow orchestration, DeepSeek tool calling, market data tools, news analysis, dynamic SEC EDGAR filing RAG, SQL persistence, Redis caching, Docker Compose, GitHub Actions, and a lightweight web UI.
 
 ## Features
 
@@ -9,7 +9,7 @@ An AI infrastructure project that generates investment research reports by combi
 - DeepSeek API tool-calling service using the OpenAI-compatible SDK interface
 - yfinance stock quote tool
 - yfinance news analysis tool with baseline sentiment scoring
-- Local SEC filing RAG over text filings in `data/filings`
+- Dynamic SEC EDGAR filing RAG for latest 10-K/10-Q retrieval, chunking, local vector indexing, and question answering
 - SQLAlchemy persistence for saved reports
 - Redis-backed JSON cache for quotes and news analysis
 - Docker Compose stack with API, PostgreSQL, and Redis
@@ -27,7 +27,7 @@ FastAPI Routes
         |
         +--> Stock Tool -----------------> yfinance quote data
         +--> News Tool ------------------> yfinance news data
-        +--> Filing RAG Tool ------------> local filing text chunks
+        +--> Filing RAG Tool ------------> SEC EDGAR latest 10-K/10-Q + local vector index
         +--> DeepSeek Tool-Calling Agent --> stock/news tools
         |
         v
@@ -96,6 +96,9 @@ REDIS_URL=redis://localhost:6379/0
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
+FILING_DATA_DIR=data/filings
+FILING_VECTOR_DIR=data/filing_vectors
+SEC_USER_AGENT=ai-investment-agent contact@example.com
 ```
 
 PostgreSQL example:
@@ -156,10 +159,16 @@ Analyze news:
 curl http://127.0.0.1:8000/news/AAPL/analysis
 ```
 
-Search local SEC filing context:
+Search SEC filing context. If the latest filing is not already indexed locally, the API maps ticker to CIK, fetches the latest 10-K or 10-Q from SEC EDGAR, chunks it, writes a local vector index under `data/filing_vectors`, then searches it:
 
 ```bash
 curl "http://127.0.0.1:8000/filings/AAPL/search?query=revenue%20margin%20risk"
+```
+
+Answer from retrieved SEC filing context:
+
+```bash
+curl "http://127.0.0.1:8000/filings/AAPL/answer?query=what%20does%20management%20say%20about%20margins&form=10-Q"
 ```
 
 List saved reports:
@@ -217,7 +226,7 @@ tests/                 Pytest suite
 
 - `yfinance` data can be delayed, incomplete, or rate-limited.
 - News sentiment currently uses a transparent keyword baseline.
-- Filing RAG uses local text files and keyword overlap scoring, not embeddings.
+- Filing RAG uses a lightweight local TF-IDF vector index. It is suitable for the MVP loop, but production-grade semantic retrieval should replace it with embeddings and a dedicated vector database.
 - Database migrations are not yet managed by Alembic.
 - Redis is used for caching, not yet for background task queues.
 

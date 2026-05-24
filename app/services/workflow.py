@@ -135,7 +135,7 @@ def retrieve_filing_context(state: ResearchWorkflowState) -> ResearchWorkflowSta
                 "success",
                 f"Retrieved local filing context for {ticker}.",
             ),
-            "data_sources": _append_unique(state, "local_filings"),
+            "data_sources": _append_unique(state, filing_context.source),
         }
     except FilingRagError as exc:
         return {
@@ -213,7 +213,7 @@ def _news_section(state: ResearchWorkflowState) -> str:
 def _filing_section(state: ResearchWorkflowState) -> str:
     filing_data = state.get("filing_context")
     if not filing_data:
-        return "SEC Filing Insights\nNo local filing context was available for this ticker."
+        return "SEC Filing Insights\nNo SEC filing context was available for this ticker."
 
     filing_context = FilingSearchResponse.model_validate(filing_data)
     bullets = [

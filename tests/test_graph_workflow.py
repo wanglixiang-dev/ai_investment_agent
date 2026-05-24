@@ -91,7 +91,7 @@ def test_graph_research_workflow_success(monkeypatch) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["ticker"] == "AAPL"
-    assert body["data_sources"] == ["yfinance:quote", "yfinance:news", "local_filings"]
+    assert body["data_sources"] == ["yfinance:quote", "yfinance:news", "sec_edgar"]
     assert [step["name"] for step in body["steps"]] == [
         "fetch_market_data",
         "analyze_news",
