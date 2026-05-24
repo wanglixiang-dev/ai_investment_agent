@@ -21,6 +21,10 @@ dev = [
     "pytest>=8.0.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["data*", "docs*", "tests*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
